@@ -368,19 +368,8 @@ fn resolve_project_root_from_hint(project: Option<&str>) -> Result<PathBuf, Stri
                 return Ok(resolved);
             }
 
-            // Mother passes host-absolute project roots. In WASI, filesystem access is
-            // scoped to guest preopens (commonly mounted at /input), so host absolute
-            // paths may need remapping to guest-visible paths.
-            if resolved.is_absolute() {
-                let remapped = PathBuf::from("/input")
-                    .join(resolved.strip_prefix("/").unwrap_or(resolved.as_path()));
-                if is_patina_project_root(&remapped) {
-                    return Ok(remapped);
-                }
-            }
-
             return Err(format!(
-                "invalid project root in slate envelope: {}",
+                "invalid project root in slate envelope: {}; Patina/Mother must mount the host project at /project and pass the guest project path",
                 resolved.display()
             ));
         }
@@ -3745,6 +3734,19 @@ mod slate_native_tests {
         fs::create_dir_all(temp.path().join(".patina")).expect("patina dir");
         fs::create_dir_all(temp.path().join("layer")).expect("layer dir");
         temp
+    }
+
+    #[test]
+    fn project_hint_does_not_remap_host_absolute_paths_to_input() {
+        let temp = temp_project();
+        let host_absolute = temp.path().to_string_lossy().to_string();
+        let error = resolve_project_root_from_hint(Some(&format!(
+            "/missing-guest-prefix{}",
+            host_absolute
+        )))
+        .expect_err("host absolute paths must not be remapped by Slate");
+        assert!(error.contains("Patina/Mother must mount"), "{error}");
+        assert!(!error.contains("/input/"), "{error}");
     }
 
     #[test]
