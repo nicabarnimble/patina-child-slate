@@ -66,17 +66,7 @@ cargo run --manifest-path /path/to/patina/Cargo.toml -- child install . \
   --force
 ```
 
-The installed manifest may need a project-local writable filesystem scope, for
-example:
-
-```toml
-[needs.scopes.filesystem.project]
-path = "/path/to/patina/project"
-mode = "read-write"
-```
-
-Patina's installer preserves existing local scope additions by default when
-reinstalling.
+Patina/Mother resolves the host project and mounts it into the child at `/project` for projectful Slate invocations. Slate receives `{"project":"/project"}` and should not need host paths or local filesystem scope edits in `child.toml`.
 
 ## Use
 
