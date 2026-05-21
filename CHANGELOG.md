@@ -6,6 +6,13 @@ The format is based on Keep a Changelog and this project uses Semantic Versionin
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-05-20
+
+### Fixed
+- Removed Slate child host-path remapping fallback that produced invalid `/input/<host-absolute-path>` paths.
+- Removed broad filesystem manifest scope so Slate relies on Patina/Mother runtime project mounting.
+- Documented the `/project` runtime mount contract for projectful Slate invocations.
+
 ## [0.2.0] - 2026-05-12
 
 ### Added
