@@ -6,6 +6,17 @@ The format is based on Keep a Changelog and this project uses Semantic Versionin
 
 ## [Unreleased]
 
+### Added
+- Slate work items now get a sibling `work.md` narrative body and prompt/handoff outputs include narrative summaries, linked context docs, and dependency direction.
+
+### Changed
+- Split Slate model, store, runtime, control protocol, work body, narrative, dependency graph, lifecycle, work fields, tests, commands, and views into focused modules.
+- Replaced internal Slate work status/kind strings with TOML-compatible enums.
+
+### Fixed
+- Dispatch bridge commands prefer the Slate work store before legacy SPEC.md fallback.
+- Work dependencies reconcile `blocked_by`/`blocks` bidirectionally and unblock stale blocked work when blockers complete.
+
 ## [0.2.1] - 2026-05-20
 
 ### Fixed

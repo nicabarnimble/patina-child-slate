@@ -76,6 +76,10 @@ patina slate show <work-id>
 patina slate check <work-id>
 ```
 
+Each Slate work item stores machine-editable fields in `work.toml` and a sibling
+`work.md` narrative body. `show`, `prompt`, `handoff`, and `packet` load the body
+plus linked repo docs so work can explain the story, rationale, and direction.
+
 Child skill help is exposed through Mother when installed:
 
 ```bash
@@ -85,7 +89,11 @@ patina mother skills help slate-manager slate-code
 
 ## Package contents
 
-- `src/lib.rs` — Slate manager child behavior
+- `src/lib.rs` — minimal WIT world bootstrap
+- `src/control.rs`, `src/dispatch.rs`, `src/runtime.rs` — Slate control protocol implementation, envelope dispatch, and project/runtime helpers
+- `src/model.rs`, `src/store.rs` — Slate domain types and project-living file/event storage
+- `src/slate_body.rs`, `src/narrative.rs`, `src/dependency_graph.rs`, `src/lifecycle.rs` — work body, story synthesis, dependency graph, and lifecycle helpers
+- `src/work_fields.rs`, `src/work_commands.rs`, `src/work_views.rs`, `src/text.rs`, `src/spec_bridge.rs` — editable work fields/schema, JSON command handlers, WIT/JSON work views, text extraction, and legacy Spec bridge
 - `child.toml` — Patina child manifest
 - `wit/` — WIT world and package-style dependency contracts
 - `wit-contract/` — Slate control interface contract copy
