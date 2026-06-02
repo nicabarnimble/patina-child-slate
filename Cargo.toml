@@ -1,6 +1,6 @@
 [package]
 name = "patina-ai-child-slate-manager"
-version = "0.2.1"
+version = "0.3.0"
 edition = "2021"
 description = "Full-WIT Slate manager child scaffold for spec workflow parity"
 

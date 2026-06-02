@@ -1,6 +1,6 @@
 [child]
 name = "slate-manager"
-version = "0.2.1"
+version = "0.3.0"
 description = "Slate full-WIT child scaffold"
 kind = "child"
 role = "app"

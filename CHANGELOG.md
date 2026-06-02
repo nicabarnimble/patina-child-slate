@@ -6,6 +6,8 @@ The format is based on Keep a Changelog and this project uses Semantic Versionin
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-06-02
+
 ### Added
 - Slate work items now get a sibling `work.md` narrative body and prompt/handoff outputs include narrative summaries, linked context docs, and dependency direction.
 
