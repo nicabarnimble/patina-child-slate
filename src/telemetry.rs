@@ -1,16 +1,5 @@
 use crate::model::WorkStatus;
 
-fn metric_suffix(value: &str) -> String {
-    value
-        .chars()
-        .map(|c| match c {
-            'a'..='z' | '0'..='9' => c,
-            'A'..='Z' => c.to_ascii_lowercase(),
-            _ => '_',
-        })
-        .collect()
-}
-
 #[cfg(target_arch = "wasm32")]
 fn counter(name: &str, delta: f64) -> Result<(), String> {
     patina_sdk::toys::measure::counter(name, delta)
@@ -35,11 +24,31 @@ fn gauge(name: &str, value: f64) -> Result<(), String> {
     Ok(())
 }
 
-pub(crate) fn record_operation(operation: &str) -> Result<(), String> {
-    counter(
-        &format!("slate_operation_{}_total", metric_suffix(operation)),
-        1.0,
-    )
+pub(crate) fn record_dispatch_call() -> Result<(), String> {
+    counter("slate_dispatch_calls", 1.0)
+}
+
+pub(crate) fn record_dispatch_command() -> Result<(), String> {
+    counter("slate_dispatch_command_total", 1.0)
+}
+
+pub(crate) fn record_operation(operation: SlateOperation) -> Result<(), String> {
+    counter(operation.metric_name(), 1.0)
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum SlateOperation {
+    CheckWork,
+    PacketWork,
+}
+
+impl SlateOperation {
+    fn metric_name(self) -> &'static str {
+        match self {
+            Self::CheckWork => "slate_operation_check_work_total",
+            Self::PacketWork => "slate_operation_packet_work_total",
+        }
+    }
 }
 
 pub(crate) fn record_transition(
@@ -47,19 +56,34 @@ pub(crate) fn record_transition(
     from: WorkStatus,
     to: WorkStatus,
 ) -> Result<(), String> {
-    record_operation(event_type)?;
-    counter(
-        &format!(
-            "slate_transition_{}_to_{}_total",
-            metric_suffix(from.as_str()),
-            metric_suffix(to.as_str())
-        ),
-        1.0,
-    )
+    match event_type {
+        "promoted" => counter("slate_transition_promoted_total", 1.0)?,
+        "activated" => counter("slate_transition_activated_total", 1.0)?,
+        other => {
+            return Err(format!(
+                "cannot emit Slate transition metric for undeclared event type '{other}'"
+            ))
+        }
+    }
+    counter("slate_transition_total", 1.0)?;
+    gauge("slate_last_transition_from_status", status_code(from))?;
+    gauge("slate_last_transition_to_status", status_code(to))
+}
+
+fn status_code(status: WorkStatus) -> f64 {
+    match status {
+        WorkStatus::Draft => 1.0,
+        WorkStatus::Ready => 2.0,
+        WorkStatus::Active => 3.0,
+        WorkStatus::Blocked => 4.0,
+        WorkStatus::Paused => 5.0,
+        WorkStatus::Complete | WorkStatus::Completed | WorkStatus::Done => 6.0,
+        WorkStatus::Abandoned => 7.0,
+    }
 }
 
 pub(crate) fn record_check(total: usize, checked: usize, passed: bool) -> Result<(), String> {
-    record_operation("check_work")?;
+    record_operation(SlateOperation::CheckWork)?;
     gauge("slate_last_check_proof_total", total as f64)?;
     gauge("slate_last_check_proof_checked", checked as f64)?;
     counter(
@@ -77,7 +101,7 @@ pub(crate) fn record_packet(
     checked: usize,
     cleanup_count: usize,
 ) -> Result<(), String> {
-    record_operation("packet_work")?;
+    record_operation(SlateOperation::PacketWork)?;
     gauge("slate_last_packet_proof_total", total as f64)?;
     gauge("slate_last_packet_proof_checked", checked as f64)?;
     gauge("slate_last_packet_cleanup_candidates", cleanup_count as f64)

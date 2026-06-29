@@ -1249,13 +1249,13 @@ impl exports::patina::slate::control::Guest for SlateManager {
     }
 
     fn dispatch(command_json: String) -> Result<String, String> {
-        toys::measure::counter("slate_dispatch_calls", 1.0)?;
+        telemetry::record_dispatch_call()?;
 
         let envelope: serde_json::Value = serde_json::from_str(&command_json)
             .map_err(|error| format!("invalid command_json: {}", error))?;
         let (command, backend_mode, project_root, data) = dispatch_data_from_envelope(&envelope)?;
 
-        toys::measure::counter(&format!("slate_dispatch_command_{}", command), 1.0)?;
+        telemetry::record_dispatch_command()?;
 
         toys::log::info(
             "slate-manager",

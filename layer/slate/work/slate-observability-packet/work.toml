@@ -1,7 +1,7 @@
 id = "slate-observability-packet"
 title = "Add Slate observability packet and metrics"
 kind = "build"
-status = "active"
+status = "complete"
 human_request = "Make standalone Slate complete and observable enough that an agent can answer exactly what is going on, why, what changed, what proof remains, and where cleanup is needed."
 user_value = "Agents and humans can ask Slate what is happening and get an evidence-backed answer instead of relying on conversation memory."
 scope = [
@@ -24,7 +24,7 @@ user_alignment = "This keeps Slate close to product closure rather than theory b
 belief_refs = []
 proof_plan = [
     "[x] cargo test passes in patina-child-slate after packet/metrics changes.",
-    "[ ] `patina child call slate-manager patina:slate/control@0.1.0.packet-work` returns status, proof progress, blockers, evidence, and next action for this work item.",
+    "[x] `patina child call slate-manager patina:slate/control@0.1.0.packet-work` returns status, proof progress, blockers, evidence, and next action for this work item.",
     "[x] Slate emits operation/check/packet metrics through the existing patina:measure import or an equivalent host-visible path.",
     "[x] Grafana-Labs Rust slate-observer can consume the updated packet shape without losing current /state and /metrics behavior.",
     "[x] Documentation explains the agent evidence protocol and the boundaries between Slate child, Patina host CLI, and Grafana observer.",
@@ -35,6 +35,7 @@ closure_evidence = [
     "Telemetry helpers record check, packet, operation, and lifecycle transition metrics; native tests enforce metric-name/value invariants without WASI imports.",
     "Grafana-Labs Rust slate-observer consumed the updated work store and reported slate-observability-packet as active with low drift risk.",
     "README.md and skills/slate-code/SKILL.md document the agent packet protocol and product-closure fields.",
+    "Installed rebuilt slate-manager locally after backup and packet-work smoke returned state.user-value, scope, non-goals, stop-condition, progress, next-safe-action, cleanup-candidates, and evidence.",
 ]
 blocked_by = []
 blocks = []
@@ -46,5 +47,7 @@ implementation_plan = [
     "Keep the outside-in Rust slate-observer in Grafana-Labs as the proving harness for state shape, metrics, and Grafana dashboards.",
     "Document the agent protocol: answer “what is going on?” only after reading Slate packet/history/measure evidence.",
 ]
+belief_harvest_decision = "no new belief; this work reinforces existing spec-driven design and session-capture doctrine."
 created_at = "1782738237"
-updated_at = "1782738598"
+updated_at = "1782739617"
+closed_at = "1782739617"
