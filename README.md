@@ -76,9 +76,25 @@ patina slate show <work-id>
 patina slate check <work-id>
 ```
 
+Until the top-level CLI exposes the full child surface, call the child directly for the agent packet:
+
+```bash
+patina child call slate-manager \
+  'patina:slate/control@0.1.0.packet-work' \
+  '[{"project":"/project","id":"<work-id>"}]'
+```
+
 Each Slate work item stores machine-editable fields in `work.toml` and a sibling
 `work.md` narrative body. `show`, `prompt`, `handoff`, and `packet` load the body
 plus linked repo docs so work can explain the story, rationale, and direction.
+
+`packet-work` is the canonical agent state endpoint. Agents should answer
+“what is going on?” from packet `state`, `history-work`, and proof evidence —
+not from conversation memory.
+
+Draft work cannot become ready unless it has user intent, user value, bounded
+scope, explicit non-goals, a stop condition, Allium/no-behavior alignment, and a
+checkable proof plan.
 
 Child skill help is exposed through Mother when installed:
 

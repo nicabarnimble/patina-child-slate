@@ -9,7 +9,7 @@ use crate::narrative::{
 use crate::runtime::{arg_bool, arg_string, require_id};
 use crate::store::{find_slate_work, load_slate_work, timestamp, update_slate_work};
 use crate::work_views::{
-    closure_gates, normalize_work_items, validate_complete_gate, work_progress,
+    closure_gates, normalize_work_items, validate_complete_gate, work_progress, work_state_json,
 };
 use std::path::Path;
 
@@ -26,6 +26,10 @@ pub(crate) fn work_record_json(
         "status": record.work.status,
         "human_request": record.work.human_request,
         "user_alignment": record.work.user_alignment,
+        "user_value": record.work.user_value,
+        "scope": record.work.scope,
+        "non_goals": record.work.non_goals,
+        "stop_condition": record.work.stop_condition,
         "allium_anchors": record.work.allium_anchors,
         "belief_refs": record.work.belief_refs,
         "implementation_plan": record.work.implementation_plan,
@@ -201,6 +205,10 @@ pub(crate) fn build_work_prompt_packet_json(
         "status": record.work.status,
         "title": record.work.title,
         "human_request": record.work.human_request,
+        "user_value": record.work.user_value,
+        "scope": record.work.scope,
+        "non_goals": record.work.non_goals,
+        "stop_condition": record.work.stop_condition,
         "narrative_summary": work_narrative_summary(record),
         "narrative_context": work_narrative_context(root, record),
         "read_first": work_read_first(root, record),
@@ -276,6 +284,7 @@ pub(crate) fn handle_work_packet(
     Ok(serde_json::json!({
         "prompt": build_work_prompt_packet_json(root, &records, record),
         "handoff": build_work_handoff_packet_json(root, &records, record),
+        "state": work_state_json(root, &records, record)?,
     }))
 }
 

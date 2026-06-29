@@ -10,7 +10,9 @@ use crate::work_fields::{
     parse_set_work_field_spec, unsupported_set_work_field_error, SetWorkFieldSpec,
     SetWorkOperation,
 };
-use crate::work_views::{validate_complete_gate, work_handoff_result, work_prompt_result};
+use crate::work_views::{
+    validate_complete_gate, work_handoff_result, work_prompt_result, work_state_result,
+};
 use crate::{exports, SlateManager};
 use std::fs;
 
@@ -41,6 +43,10 @@ fn native_slate_create_update_and_history_are_project_living() {
         kind: WorkKind::Build,
         status: WorkStatus::Draft,
         human_request: "Build it".to_string(),
+        user_value: "User can see the demo work complete".to_string(),
+        scope: vec!["Implement the demo path".to_string()],
+        non_goals: vec!["Do not redesign Slate".to_string()],
+        stop_condition: "Stop after cargo test proves the path".to_string(),
         allium_anchors: vec!["layer/allium/demo.allium".to_string()],
         user_alignment: "User confirmed".to_string(),
         proof_plan: vec!["[x] cargo test".to_string()],
@@ -122,6 +128,10 @@ fn native_slate_packet_and_completion_gates_use_work_artifacts() {
         kind: WorkKind::Build,
         status: WorkStatus::Active,
         human_request: "Build it".to_string(),
+        user_value: "User can inspect the work packet".to_string(),
+        scope: vec!["Build the packet".to_string()],
+        non_goals: vec!["Do not change unrelated lifecycle behavior".to_string()],
+        stop_condition: "Stop once packet and completion gates are proven".to_string(),
         allium_anchors: vec!["layer/allium/demo.allium".to_string()],
         user_alignment: "User confirmed".to_string(),
         implementation_plan: vec!["edit src/lib.rs".to_string()],
@@ -143,6 +153,14 @@ fn native_slate_packet_and_completion_gates_use_work_artifacts() {
     assert!(prompt.narrative_summary.contains("Story:"));
     let handoff = work_handoff_result(temp.path(), &records, record.clone()).expect("handoff");
     assert_eq!(handoff.progress.checked, 1);
+    let state = work_state_result(temp.path(), &records, record.clone()).expect("state");
+    assert_eq!(state.user_value, "User can inspect the work packet");
+    assert_eq!(state.next_safe_action, "Complete this work item.");
+    assert!(state.cleanup_candidates.is_empty());
+    assert!(state
+        .evidence
+        .iter()
+        .any(|item| item == "layer/slate/events.jsonl"));
     validate_complete_gate(&record.work).expect("complete gate");
 
     let incomplete = SlateWorkFile {
@@ -430,6 +448,10 @@ fn native_slate_activate_work_is_single_explicit_transition() {
         kind: WorkKind::Build,
         status: WorkStatus::Draft,
         human_request: "Build it".to_string(),
+        user_value: "User can activate a well-scoped work item".to_string(),
+        scope: vec!["Activation transition".to_string()],
+        non_goals: vec!["No implicit completion".to_string()],
+        stop_condition: "Stop after activation event is recorded".to_string(),
         allium_anchors: vec!["layer/core/spec-driven-design.md".to_string()],
         user_alignment: "User confirmed".to_string(),
         proof_plan: vec!["[ ] cargo test".to_string()],
@@ -460,6 +482,10 @@ fn native_slate_ready_gate_errors_list_missing_gates() {
     let err = validate_ready_gate(&work).expect_err("missing gates");
     assert!(err.contains("Missing gates:"));
     assert!(err.contains("human_request"));
+    assert!(err.contains("user_value"));
+    assert!(err.contains("scope"));
+    assert!(err.contains("non_goals"));
+    assert!(err.contains("stop_condition"));
     assert!(err.contains("proof_plan"));
     assert!(err.contains("allium_anchors"));
 }

@@ -16,6 +16,7 @@ mod runtime;
 mod slate_body;
 mod spec_bridge;
 mod store;
+mod telemetry;
 mod text;
 mod work_commands;
 mod work_fields;

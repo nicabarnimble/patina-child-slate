@@ -18,6 +18,7 @@ use crate::store::{
     load_slate_work, slate_work_path, timestamp, update_slate_work, validate_slate_id,
     write_slate_work_file, SLATE_EVENTS_PATH,
 };
+use crate::telemetry;
 use crate::text::extract_title;
 use crate::work_fields::{
     apply_list_field, apply_optional_string_field, apply_release_contract_field,
@@ -26,7 +27,7 @@ use crate::work_fields::{
 };
 use crate::work_views::{
     normalize_work_items, slate_work_event, slate_work_record, slate_work_summary,
-    validate_complete_gate, work_handoff_result, work_prompt_result,
+    validate_complete_gate, work_handoff_result, work_prompt_result, work_state_result,
 };
 use crate::SlateManager;
 use patina_sdk::toys;
@@ -188,6 +189,10 @@ impl exports::patina::slate::control::Guest for SlateManager {
                 kind: normalize_slate_kind(&req.kind),
                 status: default_slate_status(),
                 human_request: req.human_request,
+                user_value: String::new(),
+                scope: Vec::new(),
+                non_goals: Vec::new(),
+                stop_condition: String::new(),
                 allium_anchors: req.allium_anchors,
                 user_alignment: req.user_alignment,
                 belief_refs: Vec::new(),
@@ -245,6 +250,30 @@ impl exports::patina::slate::control::Guest for SlateManager {
                     "human_request" => apply_required_string_field(
                         "human_request",
                         &mut work.human_request,
+                        &spec_for_update.operation,
+                        req.value.clone(),
+                    ),
+                    "user_value" => apply_required_string_field(
+                        "user_value",
+                        &mut work.user_value,
+                        &spec_for_update.operation,
+                        req.value.clone(),
+                    ),
+                    "scope" => apply_list_field(
+                        "scope",
+                        &mut work.scope,
+                        &spec_for_update.operation,
+                        req.value.clone(),
+                    ),
+                    "non_goals" => apply_list_field(
+                        "non_goals",
+                        &mut work.non_goals,
+                        &spec_for_update.operation,
+                        req.value.clone(),
+                    ),
+                    "stop_condition" => apply_required_string_field(
+                        "stop_condition",
+                        &mut work.stop_condition,
                         &spec_for_update.operation,
                         req.value.clone(),
                     ),
@@ -370,12 +399,14 @@ impl exports::patina::slate::control::Guest for SlateManager {
                     },
                 )
                 .collect::<Vec<_>>();
+            let passed = checked == total && total > 0;
+            telemetry::record_check(total, checked, passed)?;
             Ok(exports::patina::slate::control::WorkCheckResult {
                 work_id: req.id,
                 total: u32::try_from(total).map_err(|_| "total exceeds u32".to_string())?,
                 checked: u32::try_from(checked).map_err(|_| "checked exceeds u32".to_string())?,
                 unchecked,
-                passed: checked == total && total > 0,
+                passed,
             })
         })
     }
@@ -620,8 +651,29 @@ impl exports::patina::slate::control::Guest for SlateManager {
             project: req.project.clone(),
             id: req.id.clone(),
         })?;
-        let handoff = Self::handoff_work(req)?;
-        Ok(exports::patina::slate::control::WorkPacketResult { prompt, handoff })
+        let handoff = Self::handoff_work(exports::patina::slate::control::WorkIdRequest {
+            project: req.project.clone(),
+            id: req.id.clone(),
+        })?;
+        let project_root = resolve_project_root_from_hint(req.project.as_deref())?;
+        let state = with_project_root_cwd(&project_root, || {
+            let records = load_slate_work(&project_root)?;
+            work_state_result(
+                &project_root,
+                &records,
+                find_slate_work(&records, &req.id)?.clone(),
+            )
+        })?;
+        telemetry::record_packet(
+            state.progress.total as usize,
+            state.progress.checked as usize,
+            state.cleanup_candidates.len(),
+        )?;
+        Ok(exports::patina::slate::control::WorkPacketResult {
+            prompt,
+            handoff,
+            state,
+        })
     }
 
     fn complete_work(

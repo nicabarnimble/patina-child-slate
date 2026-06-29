@@ -191,6 +191,14 @@ pub(crate) struct SlateWorkFile {
     pub(crate) status: WorkStatus,
     pub(crate) human_request: String,
     #[serde(default)]
+    pub(crate) user_value: String,
+    #[serde(default)]
+    pub(crate) scope: Vec<String>,
+    #[serde(default)]
+    pub(crate) non_goals: Vec<String>,
+    #[serde(default)]
+    pub(crate) stop_condition: String,
+    #[serde(default)]
     pub(crate) allium_anchors: Vec<String>,
     #[serde(default)]
     pub(crate) user_alignment: String,

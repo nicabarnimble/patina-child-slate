@@ -1,5 +1,6 @@
 use crate::model::{SlateWorkFile, SlateWorkRecord, WorkStatus};
 use crate::store::{append_slate_event, find_slate_work, load_slate_work, write_slate_work_file};
+use crate::telemetry;
 use std::path::Path;
 
 fn ready_gate_failures(work: &SlateWorkFile) -> Vec<String> {
@@ -12,6 +13,24 @@ fn ready_gate_failures(work: &SlateWorkFile) -> Vec<String> {
     if work.user_alignment.trim().is_empty() {
         failures.push(
             "user_alignment is empty; set `user_alignment:set` to why this matches the request"
+                .to_string(),
+        );
+    }
+    if work.user_value.trim().is_empty() {
+        failures.push(
+            "user_value is empty; set `user_value:set` to the product/user outcome".to_string(),
+        );
+    }
+    if work.scope.is_empty() {
+        failures.push("scope is empty; add bounded scope items with `scope:add`".to_string());
+    }
+    if work.non_goals.is_empty() {
+        failures
+            .push("non_goals is empty; add explicit non-goals with `non_goals:add`".to_string());
+    }
+    if work.stop_condition.trim().is_empty() {
+        failures.push(
+            "stop_condition is empty; set `stop_condition:set` to where this work must stop"
                 .to_string(),
         );
     }
@@ -63,6 +82,7 @@ fn transition_slate_work(
         event_type,
         serde_json::json!({"from": from, "to": to, "force": force}),
     )?;
+    telemetry::record_transition(event_type, from, to)?;
     records.clear();
     Ok(saved)
 }
