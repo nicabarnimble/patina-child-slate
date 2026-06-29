@@ -1,6 +1,6 @@
 [child]
 name = "slate-manager"
-version = "0.3.0"
+version = "0.4.0"
 description = "Slate full-WIT child scaffold"
 kind = "child"
 role = "app"
@@ -67,4 +67,3 @@ slate_check_failed_total = { type = "counter", labels = [] }
 slate_last_packet_proof_total = { type = "gauge", labels = [] }
 slate_last_packet_proof_checked = { type = "gauge", labels = [] }
 slate_last_packet_cleanup_candidates = { type = "gauge", labels = [] }
-
