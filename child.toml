@@ -9,6 +9,9 @@ patina_min = "0.64.0"
 [child.ingress]
 mode = "wit-only"
 
+[child.artifact]
+wasm = "target/wasm32-wasip1/release/patina_ai_child_slate_manager.wasm"
+
 [child.contract]
 default = "patina:slate/control@0.1.0.list-work"
 allow = [
