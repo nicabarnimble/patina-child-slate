@@ -1,6 +1,6 @@
 [child]
 name = "slate-manager"
-version = "0.2.1"
+version = "0.4.0"
 description = "Slate full-WIT child scaffold"
 kind = "child"
 role = "app"
@@ -8,6 +8,9 @@ patina_min = "0.64.0"
 
 [child.ingress]
 mode = "wit-only"
+
+[child.artifact]
+wasm = "target/wasm32-wasip1/release/patina_ai_child_slate_manager.wasm"
 
 [child.contract]
 default = "patina:slate/control@0.1.0.list-work"
@@ -50,3 +53,20 @@ allow = [
 [needs]
 toys = ["logging", "measure", "git", "filesystem"]
 
+[needs.metrics]
+slate_dispatch_calls = { type = "counter", labels = [] }
+slate_dispatch_command_total = { type = "counter", labels = [] }
+slate_operation_check_work_total = { type = "counter", labels = [] }
+slate_operation_packet_work_total = { type = "counter", labels = [] }
+slate_transition_total = { type = "counter", labels = [] }
+slate_transition_promoted_total = { type = "counter", labels = [] }
+slate_transition_activated_total = { type = "counter", labels = [] }
+slate_last_transition_from_status = { type = "gauge", labels = [] }
+slate_last_transition_to_status = { type = "gauge", labels = [] }
+slate_last_check_proof_total = { type = "gauge", labels = [] }
+slate_last_check_proof_checked = { type = "gauge", labels = [] }
+slate_check_passed_total = { type = "counter", labels = [] }
+slate_check_failed_total = { type = "counter", labels = [] }
+slate_last_packet_proof_total = { type = "gauge", labels = [] }
+slate_last_packet_proof_checked = { type = "gauge", labels = [] }
+slate_last_packet_cleanup_candidates = { type = "gauge", labels = [] }

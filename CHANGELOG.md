@@ -6,6 +6,33 @@ The format is based on Keep a Changelog and this project uses Semantic Versionin
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-06-29
+
+### Added
+- Slate work packets now include a canonical `state` payload with product intent, proof progress, blockers, cleanup candidates, recent events, evidence paths, and next safe action.
+- Slate work items now capture explicit `user_value`, `scope`, `non_goals`, and `stop_condition` fields.
+- Slate emits declared operation, lifecycle, check, packet, and dispatch metrics through the `measure` toy.
+
+### Changed
+- Ready gates now require product-closure fields before work can become ready.
+- Agent guidance now directs “what is going on?” answers through `packet-work` state and evidence instead of conversation memory.
+
+### Fixed
+- Declared Slate metrics in `child.toml` so measure toy emissions are accepted by the host.
+
+## [0.3.0] - 2026-06-02
+
+### Added
+- Slate work items now get a sibling `work.md` narrative body and prompt/handoff outputs include narrative summaries, linked context docs, and dependency direction.
+
+### Changed
+- Split Slate model, store, runtime, control protocol, work body, narrative, dependency graph, lifecycle, work fields, tests, commands, and views into focused modules.
+- Replaced internal Slate work status/kind strings with TOML-compatible enums.
+
+### Fixed
+- Dispatch bridge commands prefer the Slate work store before legacy SPEC.md fallback.
+- Work dependencies reconcile `blocked_by`/`blocks` bidirectionally and unblock stale blocked work when blockers complete.
+
 ## [0.2.1] - 2026-05-20
 
 ### Fixed
