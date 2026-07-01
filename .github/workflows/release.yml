@@ -32,20 +32,38 @@ jobs:
 
       - name: Prepare registry release assets
         run: |
-          mkdir -p target/patina-release
-          cp target/wasm32-wasip1/release/patina_ai_child_slate_manager.wasm target/patina-release/
-          cp child.toml target/patina-release/child.toml
-          cd target/patina-release
-          sha256sum patina_ai_child_slate_manager.wasm > patina_ai_child_slate_manager.wasm.sha256
-          sha256sum child.toml > child.toml.sha256
-          sha256sum patina_ai_child_slate_manager.wasm child.toml > checksums.txt
+          set -euo pipefail
+          artifact_path=$(python3 - <<'PY'
+          import pathlib
+          import tomllib
+
+          manifest = tomllib.loads(pathlib.Path("child.toml").read_text())
+          artifact = manifest.get("child", {}).get("artifact", {}).get("wasm")
+          if not artifact:
+              raise SystemExit("child.toml missing [child.artifact].wasm")
+          if pathlib.PurePosixPath(artifact).is_absolute() or ".." in pathlib.PurePosixPath(artifact).parts:
+              raise SystemExit(f"invalid child artifact path: {artifact}")
+          print(artifact)
+          PY
+          )
+          release_dir=target/patina-release
+          wasm_source=target/wasm32-wasip1/release/patina_ai_child_slate_manager.wasm
+          mkdir -p "$release_dir/$(dirname "$artifact_path")"
+          cp "$wasm_source" "$release_dir/$artifact_path"
+          cp child.toml "$release_dir/child.toml"
+          cd "$release_dir"
+          sha256sum "$artifact_path" | awk '{print $1}' > "$artifact_path.sha256"
+          sha256sum child.toml | awk '{print $1}' > child.toml.sha256
+          sha256sum "$artifact_path" child.toml > checksums.txt
+          tar -czf slate-manager-child.tar.gz child.toml child.toml.sha256 checksums.txt "${artifact_path%%/*}"
 
       - name: Publish GitHub release assets
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            target/patina-release/patina_ai_child_slate_manager.wasm
-            target/patina-release/patina_ai_child_slate_manager.wasm.sha256
+            target/patina-release/slate-manager-child.tar.gz
+            target/patina-release/target/wasm32-wasip1/release/patina_ai_child_slate_manager.wasm
+            target/patina-release/target/wasm32-wasip1/release/patina_ai_child_slate_manager.wasm.sha256
             target/patina-release/child.toml
             target/patina-release/child.toml.sha256
             target/patina-release/checksums.txt
